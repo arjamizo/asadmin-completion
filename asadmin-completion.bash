@@ -88,7 +88,12 @@ _asadmin()
     if [ $COMP_CWORD -eq 1 ]; then
         COMPREPLY=( $( compgen -W "--help $(_asadmin_commands)" -- $cur ) )
     elif [ $COMP_CWORD -gt 1 ]; then
-        case "$prev" in
+	for (( i = 0; i < $COMP_CWORD; i++ ));do
+		[[ ${COMP_WORDS[i]} != --* ]] && rev="${COMP_WORDS[i]} $rev"
+	done
+
+	for token in $prev $rev; do
+        case "$token" in
             start-domain)
                 COMPREPLY=( $( compgen -W "--help $(_asadmin_start_domain_options)" -- $cur ) )
                 return 0
@@ -127,5 +132,6 @@ _asadmin()
 								return 0
 								;;
         esac
+	done
     fi
 } && complete -F _asadmin asadmin
