@@ -138,10 +138,11 @@ _asadmin()
 								;;
             create-auth-realm) 
 		properties=$(asadmin create-auth-realm --help | awk '/JDBCRealm:/{a=1;next}/Note/{a=0}a' | awk '/^\s{12}[^ ]+/{print $1}')
-                COMPREPLY=( $( compgen -W "--classpath --property" -- $cur ) $( compgen -W "$properties" -S '' -- $cur ) ) 
+		properties_common=$(asadmin create-auth-realm --help | awk '/ isRealm./{a=1;next}/each realm/{a=0}a' | awk '/^ {10}[^ ]+/{print $1}')
+                COMPREPLY=( $( compgen -W "--classname --property" -- $cur ) $( compgen -W "$properties $properties_common" -S '' -- $cur ) ) 
                 return 0
                 ;;
-		    --classpath)
+		    --classname)
 			#print all lines between lines containing "this realm" and "custom realm", but skip lines which do not contain ','. 
 			realmimplementations=$(asadmin create-auth-realm --help | awk '/this realm/{a=1;next}/custom realm/{a=0} !/,/{a;next} a' | sed 's/,//g') 
 			COMPREPLY=(  $( compgen -W "$realmimplementations" -- $cur ) ) 
