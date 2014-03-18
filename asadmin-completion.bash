@@ -51,6 +51,7 @@ _asadmin_list_commands()
     list-jndi-entries
     list-threadpools
     list-virtual-servers
+    create-auth-realm
     "
 } &&
 _asadmin_misc_commands()
@@ -77,6 +78,10 @@ _asadmin_flush_connection_pool_commands()
 _asadmin_flush_jmsdest_commands()
 {
 		asadmin list-jmsdest | grep -v '^Command .* executed successfully.'
+} &&
+_asadmin_list_jndis()
+{
+		asadmin list-jndi-entries | grep -v '^Command .* executed successfully.' | grep -o '^[^:]*'
 } &&
 _asadmin()
 {
@@ -131,6 +136,22 @@ _asadmin()
                 COMPREPLY=( $( compgen -W "--help server" -- $cur ) )
 								return 0
 								;;
+            create-auth-realm) 
+		properties=$(asadmin create-auth-realm --help | awk '/JDBCRealm:/{a=1;next}/Note/{a=0}a' | awk '/^\s{12}[^ ]+/{print $1}')
+                COMPREPLY=( $( compgen -W "--classpath --property" -- $cur ) $( compgen -W "$properties" -S '' -- $cur ) ) 
+                return 0
+                ;;
+		    --classpath)
+			#print all lines between lines containing "this realm" and "custom realm", but skip lines which do not contain ','. 
+			realmimplementations=$(asadmin create-auth-realm --help | awk '/this realm/{a=1;next}/custom realm/{a=0} !/,/{a;next} a' | sed 's/,//g') 
+			COMPREPLY=(  $( compgen -W "$realmimplementations" -- $cur ) ) 
+		        return 0
+		        ;;
+		    datasource-jndi)
+			echo "$COMP_LINE" | grep -o 'datasource-jndi=' -q && continue #if current command line already contains defined datasource, then continue
+			COMPREPLY=( $(compgen -W "$(_asadmin_list_jndis)" -- $cur ) )
+		        return 0
+		        ;;
         esac
 	done
     fi
